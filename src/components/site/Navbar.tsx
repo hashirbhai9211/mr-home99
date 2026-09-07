@@ -65,6 +65,9 @@ export function Navbar({ brandName, logo, items, whatsappHref, phone, telHref }:
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     document.documentElement.classList.add("lenis-stopped");
+    // Hide floating CTAs (WhatsApp bubble) while the menu is open so they can
+    // never sit above menu links; restored automatically on close.
+    document.documentElement.classList.add("mrh-menu-open");
     const first = drawerRef.current?.querySelector<HTMLElement>("a,button");
     first?.focus();
     const onKey = (e: KeyboardEvent) => {
@@ -81,6 +84,7 @@ export function Navbar({ brandName, logo, items, whatsappHref, phone, telHref }:
     return () => {
       document.body.style.overflow = prev;
       document.documentElement.classList.remove("lenis-stopped");
+      document.documentElement.classList.remove("mrh-menu-open");
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
@@ -88,6 +92,7 @@ export function Navbar({ brandName, logo, items, whatsappHref, phone, telHref }:
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
   return (
+    <>
     <header
       ref={headerRef}
       className={cn(
@@ -146,7 +151,7 @@ export function Navbar({ brandName, logo, items, whatsappHref, phone, telHref }:
             </div>
             <button
               type="button"
-              onClick={() => setOpen(true)}
+              onClick={() => { setOpen(true); setHidden(false); }}
               aria-expanded={open}
               aria-controls="mobile-menu"
               aria-label="Open menu"
@@ -157,11 +162,21 @@ export function Navbar({ brandName, logo, items, whatsappHref, phone, telHref }:
           </div>
         </div>
       </div>
+    </header>
 
-      <AnimatePresence>
-        {open && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] bg-ink/40 backdrop-blur-sm md:hidden" onClick={() => setOpen(false)} />
+    {/*
+      Mobile drawer lives OUTSIDE the <header> on purpose: the header always
+      carries a translate/will-change transform (auto-hide animation), and a
+      transformed element becomes the containing block for `position: fixed`
+      descendants — which previously collapsed this full-screen drawer to the
+      header's ~104px box (links invisible, page visible behind, CTAs floating
+      mid-screen). As a sibling of the header, `fixed` resolves against the
+      real viewport on every breakpoint.
+    */}
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[85] bg-ink/40 backdrop-blur-sm md:hidden" onClick={() => setOpen(false)} />
             <motion.div
               id="mobile-menu"
               ref={drawerRef}
@@ -172,7 +187,7 @@ export function Navbar({ brandName, logo, items, whatsappHref, phone, telHref }:
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 32 }}
-              className="fixed inset-y-0 right-0 z-[70] flex w-[min(92vw,400px)] flex-col bg-ivory shadow-2xl md:hidden"
+              className="fixed inset-y-0 right-0 z-[90] flex w-[min(92vw,400px)] flex-col bg-ivory shadow-2xl md:hidden"
             >
               <div className="flex items-center justify-between px-5 py-5">
                 <div className="relative h-9 w-[140px]"><Image src={logo} alt={brandName} fill className="object-contain object-left" sizes="140px" unoptimized={logo.endsWith(".svg")} /></div>
@@ -198,9 +213,9 @@ export function Navbar({ brandName, logo, items, whatsappHref, phone, telHref }:
                 <a href={telHref} className="flex h-12 items-center justify-center gap-2 rounded-full border border-ink/10 bg-white text-ink"><Phone className="h-4 w-4" /> {phone}</a>
               </div>
             </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </header>
+        </>
+      )}
+    </AnimatePresence>
+    </>
   );
 }

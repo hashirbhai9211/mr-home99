@@ -147,9 +147,15 @@ function Globe({ markets, selectedSlug, onSelect, onReady, quality }: Props & { 
     const cam = state.camera as THREE.PerspectiveCamera;
     const aspect = state.size.width / Math.max(state.size.height, 1);
     const narrow = aspect < 0.95 ? Math.min(0.95 / aspect, 1.5) : 1;
+    // Narrow/portrait viewports: additionally pad the distance by the small
+    // horizontal margin ratio. On phones the canvas is ~92vw × ~116vw tall, so
+    // the globe is horizontally margin-bound; this keeps the limb + marker
+    // labels (which extend past the limb) fully visible and the globe optically
+    // centred instead of touching the frame edges.
+    const xPad = aspect < 1 ? Math.min(1.09 / aspect, 1.28) : 1;
     const halfFov = (cam.fov * Math.PI) / 360;
-    const fitZ = Math.max(1.2 / Math.tan(halfFov), 3.1) * narrow; // globe + atmosphere glow
-    const focusZ = Math.max(1.05 / Math.tan(halfFov), 2.75) * narrow; // focused globe stays uncropped
+    const fitZ = Math.max(1.2 / Math.tan(halfFov), 3.1) * narrow * xPad;
+    const focusZ = Math.max(1.05 / Math.tan(halfFov), 2.75) * narrow * xPad;
     const targetZ = active ? focusZ : fitZ;
     cam.position.z = THREE.MathUtils.damp(cam.position.z, targetZ, 2.2, d);
     cam.lookAt(0, 0, 0);

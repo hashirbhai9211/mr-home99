@@ -125,7 +125,10 @@ export function EarthSection({ section, markets, projectCounts, standalone = fal
             </div>
             {webgl && !glFailed && inView && (
               <GLBoundary onError={() => setGlFailed(true)}>
-                <div className="absolute inset-[-12%]">
+                {/* The canvas only needs a small glow over-overscan; on phones a
+                    wide inset shifts the globe off-centre and wastes width, so
+                    the over-overscan is reduced to a subtle halo on small screens. */}
+                <div className="absolute inset-x-[-4%] inset-y-[-8%] sm:inset-[-12%]">
                   <Earth3D markets={earthMarkets} selectedSlug={selected} onSelect={setSelected} onReady={onReady} quality={quality} />
                 </div>
               </GLBoundary>
@@ -166,7 +169,10 @@ export function EarthSection({ section, markets, projectCounts, standalone = fal
           </AnimatePresence>
         </div>
 
-        <div className="relative z-20 lg:col-span-3">
+        {/* min-w-0: the mobile pill strip (overflow-x-auto) otherwise forces this
+            grid item's min-content ≈ all pills' width (~1100px+), blowing the
+            single-column mobile grid wide and shoving the globe off-centre. */}
+        <div className="relative z-20 min-w-0 lg:col-span-3">
           <ul ref={listRef} role="listbox" aria-label="Select a market" aria-activedescendant={selected ? `market-opt-${selected}` : undefined} onKeyDown={onKeyNav} className="flex snap-x gap-2 overflow-x-auto pb-2 scrollbar-none lg:block lg:space-y-1.5 lg:overflow-visible lg:pb-0" data-lenis-prevent>
             {markets.map((m) => {
               const isA = m.slug === selected;

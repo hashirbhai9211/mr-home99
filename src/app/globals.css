@@ -127,6 +127,13 @@ body {
   animation: pulse-ring 2s ease-out infinite;
 }
 
+/* While the mobile menu drawer is open, floating CTAs must never sit above or
+   beside the menu links. !important overrides framer-motion's inline opacity. */
+html.mrh-menu-open .mrh-float {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 .scrollbar-none::-webkit-scrollbar { display: none; }
 .scrollbar-none { scrollbar-width: none; }
 

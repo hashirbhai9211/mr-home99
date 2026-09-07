@@ -45,11 +45,18 @@ export function Hero({ eyebrow, title, body, ctaLabel, ctaHref, secondaryCtaLabe
     const el = root.current;
     if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const ctx = gsap.context(() => {
-      gsap.to("[data-hero-img]", { yPercent: 12, scale: 1.06, ease: "none", scrollTrigger: { trigger: el, start: "top top", end: "bottom top", scrub: true } });
+      // Mobile: keep the parallax subtle — a full 12% slide pushes the photo
+      // down into the stats band (misaligned overlap on phones). Desktop keeps
+      // the cinematic depth unchanged.
+      gsap.to("[data-hero-img]", { yPercent: 4, ease: "none", scrollTrigger: { trigger: el, start: "top top", end: "bottom top", scrub: true } });
       gsap.to("[data-hero-copy]", { yPercent: -18, opacity: 0.2, ease: "none", scrollTrigger: { trigger: el, start: "top top", end: "70% top", scrub: true } });
-      gsap.to("[data-hero-ribbon]", { xPercent: -8, ease: "none", scrollTrigger: { trigger: el, start: "top top", end: "bottom top", scrub: true } });
     }, el);
-    return () => ctx.revert();
+    const mm = gsap.matchMedia();
+    mm.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
+      gsap.to("[data-hero-img]", { yPercent: 12, scale: 1.06, ease: "none", scrollTrigger: { trigger: el, start: "top top", end: "bottom top", scrub: true } });
+      gsap.to("[data-hero-ribbon]", { xPercent: -8, ease: "none", scrollTrigger: { trigger: el, start: "top top", end: "bottom top", scrub: true } });
+    });
+    return () => { ctx.revert(); mm.revert(); };
   }, []);
 
   const onMove = (e: React.MouseEvent) => {
